@@ -13,11 +13,14 @@ import (
 	"github.com/prometheus/common/expfmt"
 )
 
-func recordMetrics() {
+func recordMetrics(delay time.Duration) {
+	temp := 10
 	go func() {
 		for {
 			opsProcessed.Inc()
-			time.Sleep(2 * time.Second)
+			temperature.Set(float64(temp))
+			time.Sleep(delay)
+			temp += 1
 		}
 	}()
 }
@@ -27,12 +30,21 @@ var (
 		Name: "myapp_processed_ops_total",
 		Help: "The total number of processed events",
 	})
+	temperature = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "myapp_temperature",
+		Help: "The current room temperature",
+	})
 )
 
 func main() {
 
 	if os.Args[1] == "scrape" {
-		recordMetrics()
+		recordMetrics(2 * time.Second)
+
+		http.Handle("/metrics", promhttp.Handler())
+		http.ListenAndServe(":2112", nil)
+	} else if os.Args[1] == "scrape2" {
+		recordMetrics(60 * time.Second)
 
 		http.Handle("/metrics", promhttp.Handler())
 		http.ListenAndServe(":2112", nil)
