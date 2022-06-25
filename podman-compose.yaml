@@ -1,0 +1,10 @@
+version: '3.1'
+services:
+  prometheus:
+    image: quay.io/prometheus/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./.podman-compose/prometheus/config:/etc/prometheus:z
+      - ./.podman-compose/prometheus/data:/prometheus:z
+    restart: always
